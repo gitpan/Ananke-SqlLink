@@ -12,7 +12,7 @@ use vars qw($conn);
 use DBI;
 use strict;
 
-my $VERSION = '1.1.1';
+our $VERSION = '1.1.1';
 
 # Inicia conexao
 sub new {
@@ -29,6 +29,7 @@ sub new {
 			conn => $conn,
 			type => $vars->{type},
 			error => undef,
+			pre => undef,
 		}, $self;
 	}
 
@@ -37,20 +38,20 @@ sub new {
 # Recupera dados do db
 sub return {
 	my ($self,$q,$t) = @_;
-	my (@array,@row,$row,$c);
-	
+	my (@array,@row,$row);
+
 	# Verifica formato de dados que deve retorna
 	$t = "scalar" if (!$t);
-	
+
 	# Prepara query
-	eval { $c = $self->{conn}->prepare($q); };
+	eval { $self->{pre} = $self->{conn}->prepare($q); };
 
 	# Verifica se conseguiu executar a query
-	eval { $c->execute } or die DBI::errstr;
+	eval { $self->{pre}->execute } or die DBI::errstr;
 	
 	# Retorna em formato array
 	if ($t eq "array") {
-		while (@row = $c->fetchrow_array) {
+		while (@row = $self->{pre}->fetchrow_array) {
 			push(@array,[ @row ]);
 		}
 	}
@@ -58,16 +59,16 @@ sub return {
 	# Retorna em formato hash
 	elsif ($t eq "scalar") {
 		eval { 
-			while ($row = $c->fetchrow_hashref) {
+			while ($row = $self->{pre}->fetchrow_hashref) {
 				push(@array,$row);
 			}
 		};
 	}
 
-	eval { $c->finish };
+	eval { $self->{pre}->finish };
 
 	# Apaga variaveis indesejadas
-	undef $c; undef $q; undef $t;
+	undef $q; undef $t;
 
 	# Retorna os resultados do select
 	return @array;
@@ -109,6 +110,13 @@ sub disconnect {
 	delete $self->{conn};
 	delete $self->{type};
 	$self = undef;
+}
+
+# Recupera numero de linhas
+sub rows {
+	my ($self) = @_;
+
+	return $self->{pre}->rows;
 }
 
 # Recupera ultima linha inserida
