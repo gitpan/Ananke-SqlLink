@@ -12,7 +12,7 @@ use vars qw($conn);
 use DBI;
 use strict;
 
-my $VERSION = '1.0';
+my $VERSION = '1.1';
 
 # Inicia conexao
 sub new {
@@ -45,7 +45,7 @@ sub return {
 	eval { $c = $self->{conn}->prepare($q); };
 
 	# Verifica se conseguiu executar a query
-	eval { $c->execute } or print DBI::errstr;
+	eval { $c->execute } or die DBI::errstr;
 	
 	# Retorna em formato array
 	if ($t eq "array") {
@@ -79,7 +79,7 @@ sub do {
 	$self->{conn}->do($q);
 	
 	if (DBI::errstr) {
-		print DBI::errstr;
+		die DBI::errstr;
 		return 0;
 	}
 	
@@ -228,7 +228,7 @@ MySQL easy access
 =head1 AUTHOR
 
    Udlei D. R. Nattis
-	nattis@anankeit.com.br
+   nattis@anankeit.com.br
    http://www.nobol.com.br
    http://www.anankeit.com.br
 
