@@ -12,7 +12,7 @@ use vars qw($conn);
 use DBI;
 use strict;
 
-my $VERSION = '1.1';
+my $VERSION = '1.1.1';
 
 # Inicia conexao
 sub new {
@@ -28,6 +28,7 @@ sub new {
 		bless {
 			conn => $conn,
 			type => $vars->{type},
+			error => undef,
 		}, $self;
 	}
 
@@ -79,7 +80,7 @@ sub do {
 	$self->{conn}->do($q);
 	
 	if (DBI::errstr) {
-		die DBI::errstr;
+		$self->{error} = DBI::errstr;
 		return 0;
 	}
 	
@@ -116,6 +117,12 @@ sub insertid {
 
 	# mysql
 	if ($self->{type} eq "mysql") { $self->{conn}->{mysql_insertid}; }
+}
+
+# retorn erro
+sub error {
+	my ($self) = @_;
+	return $self->{error};
 }
 
 1;
